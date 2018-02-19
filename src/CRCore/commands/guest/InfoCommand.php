@@ -10,31 +10,46 @@ declare(strict_types=1);
 
 namespace CRCore\commands\guest;
 
-use CRCore\commands\BaseCommand;
-use CRCore\Loader;
-use CRCore\API;
-use pocketmine\command\CommandSender;
-use pocketmine\item\Item;
 use pocketmine\item\WrittenBook;
 use pocketmine\Player;
+use pocketmine\item\Item;
+use pocketmine\plugin\Plugin;
 use pocketmine\utils\TextFormat;
+use pocketmine\command\CommandSender;
+use pocketmine\command\PluginCommand;
 
-class InfoCommand extends BaseCommand{
 
-    public function __construct(Loader $plugin){
-        parent::__construct($plugin, "info", "Info Command", "/info", ["info"]);
+class InfoCommand extends PluginCommand{
+
+
+	/**
+	 * InfoCommand constructor.
+	 * @param string $name
+	 * @param Plugin $owner
+	 */
+    public function __construct (string $name, Plugin $owner){
+	    parent::__construct($name, $owner);
+	    $this->setDescription("Info Command");
+	    $this->setPermission("castleraid.info");
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args){
+	/**
+	 * @param CommandSender $sender
+	 * @param string $commandLabel
+	 * @param array $args
+	 * @return bool|mixed
+	 */
+	public function execute(CommandSender $sender, string $commandLabel, array $args){
         if(!$sender instanceof Player){
-            $sender->sendMessage(API::NOT_PLAYER);
+            $sender->sendMessage('Only In-Game');
             return false;
         }
-        if(!$sender->hasPermission("castleraid.info")){
-            $sender->sendMessage(parent::NO_PERMISSION);
-            return false;
-        }
+
+        if(!$this->testPermission($sender)) return true;
+
+        /** @var WrittenBook $book */
         $book = Item::get(Item::WRITTEN_BOOK, 0, 1);
+
         $book->setTitle(TextFormat::GREEN . TextFormat::UNDERLINE . "Information Booklet");
         $book->setPageText(0, TextFormat::GREEN . TextFormat::UNDERLINE . "What's a Kingdom?" . TextFormat::BLACK . "\n - A kingdom, is your home, its like a factions. Except bigger! \n - Kingdoms, have many members and a custom world! \n - Each kingdom has a king, this king is who you shall fight for!");
         $book->setPageText(1, TextFormat::GREEN . TextFormat::UNDERLINE . "How can my Kingdom win?" . TextFormat::BLACK . "\n - You can earn power in the weekly wars, and from PvPing enemy kingdoms! \n - You can earn power in our KOTH at warzone.");

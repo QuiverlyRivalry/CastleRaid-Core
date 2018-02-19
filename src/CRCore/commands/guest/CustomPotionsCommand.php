@@ -10,33 +10,45 @@ declare(strict_types=1);
 
 namespace CRCore\commands\guest;
 
-use CRCore\commands\BaseCommand;
-use CRCore\Loader;
-use CRCore\API;
 use jojoe77777\FormAPI\FormAPI;
 use onebone\economyapi\EconomyAPI;
 use pocketmine\command\CommandSender;
+use pocketmine\command\PluginCommand;
 use pocketmine\item\Item;
 use pocketmine\Player;
+use pocketmine\plugin\Plugin;
 use pocketmine\utils\TextFormat;
 
-class CustomPotionsCommand extends BaseCommand{
+class CustomPotionsCommand extends PluginCommand{
 
     public $nomoney = TextFormat::RED . "You don't have enough money.";
 
-    public function __construct(Loader $plugin){
-        parent::__construct($plugin, "cpshop", "CPShop Command", "/cpshop", ["cpshop"]);
+
+	/**
+	 * CustomPotionsCommand constructor.
+	 * @param string $name
+	 * @param Plugin $owner
+	 */
+    public function __construct (string $name, Plugin $owner){
+	    parent::__construct($name, $owner);
+	    $this->setDescription("CPShop Command");
+	    $this->setPermission("castleraid.cp2");
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args){
+	/**
+	 * @param CommandSender $sender
+	 * @param string $commandLabel
+	 * @param array $args
+	 * @return bool|mixed
+	 */
+	public function execute(CommandSender $sender, string $commandLabel, array $args){
         if(!$sender instanceof Player){
-            $sender->sendMessage(API::NOT_PLAYER);
+            $sender->sendMessage('Only In-Game');
             return false;
         }
-        if(!$sender->hasPermission("castleraid.cp2")){
-            $sender->sendMessage(parent::NO_PERMISSION);
-            return false;
-        }
+
+        if(!$this->testPermission($sender)) return true;
+
         $api = $this->getPlugin()->getServer()->getPluginManager()->getPlugin("FormAPI");
         $form = $api->createSimpleForm(function (Player $sender, array $data){
             if(isset($data[0])){

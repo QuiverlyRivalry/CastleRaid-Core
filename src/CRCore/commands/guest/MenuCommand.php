@@ -10,29 +10,42 @@ declare(strict_types=1);
 
 namespace CRCore\commands\guest;
 
-use CRCore\API;
-use CRCore\commands\BaseCommand;
-use CRCore\Loader;
-use jojoe77777\FormAPI\FormAPI;
-use pocketmine\command\CommandSender;
 use pocketmine\Player;
+use jojoe77777\FormAPI\FormAPI;
+use pocketmine\plugin\Plugin;
 use pocketmine\utils\TextFormat;
+use pocketmine\command\CommandSender;
+use pocketmine\command\PluginCommand;
 
-class MenuCommand extends BaseCommand{
+class MenuCommand extends PluginCommand{
 
-    public function __construct(Loader $plugin){
-        parent::__construct($plugin, "menu", "Control Panel", "/menu", ["cp"]);
+
+	/**
+	 * MenuCommand constructor.
+	 * @param string $name
+	 * @param Plugin $owner
+	 */
+    public function __construct (string $name, Plugin $owner){
+	    parent::__construct($name, $owner);
+	    $this->setDescription("Control Panel");
+	    $this->setAliases(["cp"]);
+	    $this->setPermission("castleraid.cp");
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args){
+	/**
+	 * @param CommandSender $sender
+	 * @param string $commandLabel
+	 * @param array $args
+	 * @return bool|mixed
+	 */
+	public function execute(CommandSender $sender, string $commandLabel, array $args){
         if(!$sender instanceof Player){
-            $sender->sendMessage(API::NOT_PLAYER);
+            $sender->sendMessage('Only In-Game');
             return false;
         }
-        if(!$sender->hasPermission("castleraid.cp")){
-            $sender->sendMessage(parent::NO_PERMISSION);
-            return false;
-        }
+
+        if(!$this->testPermission($sender)) return true;
+
         $api = $this->getPlugin()->getServer()->getPluginManager()->getPlugin("FormAPI");
         $form = $api->createSimpleForm(function (Player $sender, array $data){
             if(isset($data[0])){

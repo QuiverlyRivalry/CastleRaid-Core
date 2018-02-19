@@ -10,37 +10,52 @@ declare(strict_types=1);
 
 namespace CRCore\commands\guest;
 
-use CRCore\Loader;
-use CRCore\API;
-use CRCore\commands\BaseCommand;
-use pocketmine\command\CommandSender;
 use pocketmine\Player;
+use pocketmine\command\CommandSender;
+use pocketmine\command\PluginCommand;
+use pocketmine\plugin\Plugin;
 use pocketmine\utils\TextFormat;
 
-class NickCommand extends BaseCommand{
+class NickCommand extends PluginCommand{
 
-    public function __construct(Loader $plugin){
-        parent::__construct($plugin, "nickme", "Nick command", "/nickme", ["nickme"]);
+	/**
+	 * NickCommand constructor.
+	 * @param string $name
+	 * @param Plugin $owner
+	 */
+    public function __construct (string $name, Plugin $owner){
+	    parent::__construct($name, $owner);
+	    $this->setDescription("Nick command");
+	    $this->setAliases(["nickme"]);
+	    $this->setPermission("castleraid.nick");
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args){
+	/**
+	 * @param CommandSender $sender
+	 * @param string $commandLabel
+	 * @param array $args
+	 * @return bool|mixed
+	 */
+	public function execute(CommandSender $sender, string $commandLabel, array $args){
         if(!$sender instanceof Player){
-            $sender->sendMessage(API::NOT_PLAYER);
+            $sender->sendMessage('Only In-Game');
             return false;
         }
-        if(!$sender->hasPermission("castleraid.nick")){
-            $sender->sendMessage(parent::NO_PERMISSION);
-            return false;
-        }
+
+        if(!$this->testPermission($sender)) return true;
+
         if(!isset($args[0])){
             $sender->sendMessage("Please provide a nickname.");
+            return false;
         }
-        if($args[0] === "off"){
-            $sender->setDisplayName($sender->getName());
-        }else{
-            $sender->setDisplayName($args[0]);
-            $sender->sendMessage(TextFormat::BOLD . TextFormat::GRAY . "[" . TextFormat::GREEN . "!" . TextFormat::GRAY . "]" . TextFormat::RESET . TextFormat::GRAY . " You're now nicked as " . TextFormat::RED . "$args[0]" . TextFormat::GRAY . "!");
+
+        if(strtolower($args[0]) == "off"){
+	        $sender->setDisplayName($sender->getName());
+	        return false;
         }
+
+        $sender->setDisplayName($args[0]);
+        $sender->sendMessage(TextFormat::BOLD . TextFormat::GRAY . "[" . TextFormat::GREEN . "!" . TextFormat::GRAY . "]" . TextFormat::RESET . TextFormat::GRAY . " You're now nicked as " . TextFormat::RED . "$args[0]" . TextFormat::GRAY . "!");
         return true;
     }
 }

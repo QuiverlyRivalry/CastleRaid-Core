@@ -10,41 +10,53 @@ declare(strict_types=1);
 
 namespace CRCore\commands\staff;
 
-use CRCore\API;
-use CRCore\commands\BaseCommand;
-use CRCore\Loader;
-use pocketmine\command\CommandSender;
 use pocketmine\Player;
+use pocketmine\command\CommandSender;
+use pocketmine\command\PluginCommand;
+use pocketmine\plugin\Plugin;
 use pocketmine\utils\TextFormat;
 
-class FlyCommand extends BaseCommand{
+class FlyCommand extends PluginCommand{
 
-    public function __construct(Loader $plugin){
-        parent::__construct($plugin, "fly", "Flight mode", "/fly", ["fly"]);
+	/**
+	 * FlyCommand constructor.
+	 * @param string $name
+	 * @param Plugin $owner
+	 */
+    public function __construct (string $name, Plugin $owner){
+	    parent::__construct($name, $owner);
+	    $this->setDescription("Flight mode");
+	    $this->setUsage("/fly");
+	    $this->setPermission("castleraid.fly");
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args){
+	/**
+	 * @param CommandSender $sender
+	 * @param string $commandLabel
+	 * @param array $args
+	 * @return bool|mixed
+	 */
+	public function execute(CommandSender $sender, string $commandLabel, array $args){
         if(!$sender instanceof Player){
-            $sender->sendMessage(API::NOT_PLAYER);
+            $sender->sendMessage('Only In-Game');
             return false;
         }
-        if(!$sender->hasPermission("castleraid.fly")){
-            $sender->sendMessage(parent::NO_PERMISSION);
-            return false;
+
+        if(!$this->testPermission($sender)) return true;
+
+        if($sender->isCreative()){
+	        $sender->sendMessage(TextFormat::RED . "You are already in creative mode!");
+	        return false;
         }
-        if(!$sender->isCreative()){
-            if(!$sender->getAllowFlight()){
-                $sender->setAllowFlight(true);
-                $sender->setFlying(true);
-                $sender->sendMessage(TextFormat::GREEN . "Fly mode enabled.");
-            }else{
-                $sender->setAllowFlight(false);
-                $sender->setFlying(false);
-                $sender->sendMessage(TextFormat::RED . "Fly mode disabled.");
-            }
-        }else{
-            $sender->sendMessage(TextFormat::RED . "You are already in creative mode!");
-        }
+
+        $sender->setAllowFlight($sender->getAllowFlight() == true ? false : true);
+		$sender->setFlying($sender->getAllowFlight());
+		$table = [
+			true => TextFormat::GREEN . "Fly mode enabled.",
+			false => TextFormat::RED . "Fly mode disabled."
+		];
+
+		$sender->sendMessage($table[$sender->getAllowFlight()]);
         return true;
     }
 }

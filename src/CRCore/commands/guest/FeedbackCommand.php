@@ -10,30 +10,43 @@ declare(strict_types=1);
 
 namespace CRCore\commands\guest;
 
-use CRCore\API;
-use CRCore\commands\BaseCommand;
-use CRCore\forms\FeedbackForm;
-use CRCore\Loader;
-use pocketmine\command\CommandSender;
-use pocketmine\form\element\Input;
 use pocketmine\Player;
+use pocketmine\plugin\Plugin;
+use CRCore\forms\FeedbackForm;
 use pocketmine\utils\TextFormat;
+use pocketmine\form\element\Input;
+use pocketmine\command\CommandSender;
+use pocketmine\command\PluginCommand;
 
-class FeedbackCommand extends BaseCommand{
+class FeedbackCommand extends PluginCommand{
 
-    public function __construct(Loader $plugin){
-        parent::__construct($plugin, "feedback", "Gives us feedback", "/feedback", ["fb"]);
+
+	/**
+	 * FeedbackCommand constructor.
+	 * @param string $name
+	 * @param Plugin $owner
+	 */
+    public function __construct (string $name, Plugin $owner){
+	    parent::__construct($name, $owner);
+	    $this->setDescription("Gives us feedback");
+	    $this->setAliases(["fb"]);
+	    $this->setPermission("castleraid.feedback");
     }
 
-    public function execute(CommandSender $sender, string $commandLabel, array $args){
+	/**
+	 * @param CommandSender $sender
+	 * @param string $commandLabel
+	 * @param array $args
+	 * @return bool|mixed
+	 */
+	public function execute(CommandSender $sender, string $commandLabel, array $args){
         if(!$sender instanceof Player){
-            $sender->sendMessage(API::NOT_PLAYER);
+            $sender->sendMessage('Only In-Game');
             return false;
         }
-        if(!$sender->hasPermission("castleraid.feedback")){
-            $sender->sendMessage(parent::NO_PERMISSION);
-            return false;
-        }
+
+        if(!$this->testPermission($sender)) return true;
+
         $sender->sendForm($this->makeForm());
         return true;
     }
